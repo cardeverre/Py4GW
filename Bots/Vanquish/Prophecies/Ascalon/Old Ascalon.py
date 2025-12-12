@@ -10,7 +10,9 @@ import Py4GW
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+base_path = os.path.join(Py4GW.Console.get_projects_path(), "Bots", "Vanquish", "Prophecies")
+if base_path not in sys.path:
+    sys.path.insert(0, base_path)
 from vq_prophecies_base import check_title, setup_bot_common, add_combat_coroutines
 
 BOT_VERSION = "1.0"
@@ -24,9 +26,9 @@ OLD_ASCALON_MAP_ID = 33
 ASCALON_CITY_OUTPOST_ID = 81
 
 EXIT_PATH: list[tuple[float, float]] = [
-    (5088, 3087), (2806, 1505),
+    (2806, 1505), (-8, 1869),
 ]
-EXIT_PORTAL_COORDS = (-8, 1869)
+EXIT_PORTAL_COORDS = (-1038, 1763)
 
 # 236 waypoints - 100% VQ + wall-crawled for exploration
 Vanquish_Path: list[tuple[float, float]] = [
