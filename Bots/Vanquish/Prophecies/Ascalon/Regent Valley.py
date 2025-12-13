@@ -10,10 +10,10 @@ import Py4GW
 import os
 import sys
 
-base_path = os.path.join(Py4GW.Console.get_projects_path(), "Bots", "Vanquish", "Prophecies")
+base_path = os.path.join(Py4GW.Console.get_projects_path(), "Bots", "Vanquish")
 if base_path not in sys.path:
     sys.path.insert(0, base_path)
-from vq_prophecies_base import check_title, setup_bot_common, add_combat_coroutines
+from vq_base_class import check_title, setup_bot_common, add_combat_coroutines
 
 BOT_VERSION = "2.6"
 BOT_NAME = "VQ Regent Valley"
