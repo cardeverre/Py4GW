@@ -1012,13 +1012,13 @@ class Yield:
                 yield from Yield.wait(50)
                 retries += 1
             yield from Yield.wait(50)
-        
+            
         @staticmethod
         def _wait_for_empty_queue(queue_name:str):
             from ..Py4GWcorelib import ActionQueueManager
             while not ActionQueueManager().IsEmpty(queue_name):
                 yield from Yield.wait(50)
-            
+        
         @staticmethod
         def _salvage_item(item_id):
             from ..Inventory import Inventory
@@ -1054,7 +1054,7 @@ class Yield:
                 yield from Yield.wait(100)
                 
             if log and len(item_array) > 0:
-                ConsoleLog("SalvageItems", f"Salvaged {len(item_array)} items.", Console.MessageType.Info)
+                ConsoleLog("SalvageItems", f"Salvaged {len(item_array)} items.", Console.MessageType.Info)     
                 
         @staticmethod
         def _identify_item(item_id):
@@ -1066,7 +1066,7 @@ class Yield:
                 ConsoleLog("IdentifyItems", "No ID kits found.", Console.MessageType.Warning)
                 return
             Inventory.IdentifyItem(item_id, id_kit)
-            
+
         @staticmethod
         def IdentifyItems(item_array:list[int], log=False):
             from ..Py4GWcorelib import ActionQueueManager, ConsoleLog, Console
@@ -1082,6 +1082,7 @@ class Yield:
                 
             if log and len(item_array) > 0:
                 ConsoleLog("IdentifyItems", f"Identified {len(item_array)} items.", Console.MessageType.Info)
+                
                 
         @staticmethod
         def DepositItems(item_array:list[int], log=False):
@@ -1249,16 +1250,9 @@ class Yield:
 
                 # Try to walk to item
                 item_x, item_y = GLOBAL_CACHE.Agent.GetXY(item_id)
-                item_reached = yield from Yield.Movement.FollowPath(
-                    [(item_x, item_y)], timeout=pickup_timeout, tolerance=144  # Touch Range
-                )
+                item_reached = yield from Yield.Movement.FollowPath([(item_x, item_y)], timeout=pickup_timeout)
                 if not item_reached:
-                    player_x, player_y = GLOBAL_CACHE.Player.GetXY()
-                    dx = item_x - player_x
-                    dy = item_y - player_y
-                    distance = int((dx * dx + dy * dy) ** 0.5)
-                    ConsoleLog("LootItems", f"Failed to reach item {item_id} - {distance}, skipping.", Console.MessageType.Warning)
-                    ActionQueueManager().ResetAllQueues()
+                    ConsoleLog("LootItems", f"Failed to reach item {item_id}, skipping.", Console.MessageType.Warning)
                     failed_items.append(item_id)
                     continue
 
@@ -1993,11 +1987,14 @@ class Yield:
             def _timeout_reached() -> bool:
                 return timeout_timer.IsExpired()
             
+            #A new character is not reported here until next login, so we skip this check
+            """
             character_names = [char.player_name for char in GLOBAL_CACHE.Player.GetLoginCharacters()]
             if character_name_to_delete not in character_names:
                 ConsoleLog("Reroll", f"Character '{character_name_to_delete}' not found among login characters.", Console.MessageType.Error, log)
                 yield from Yield.wait(100)
                 return False
+            """
             
             timeout_timer = ThrottledTimer(timeout_ms)
             ActionQueueManager().ResetAllQueues()
@@ -2013,11 +2010,12 @@ class Yield:
                 yield from Yield.wait(100)
                 return False
                 
+            yield from Yield.wait(1000)
             pregame = GLOBAL_CACHE.Player.GetPreGameContext()
             character_index = pregame.chars.index(character_name_to_delete) if character_name_to_delete in pregame.chars else -1
-            last_known_index = pregame.index_1
+            last_known_index = pregame.chosen_character_index
             
-            if character_index == -1:
+            """if character_index == -1:
                 ConsoleLog("Reroll", f"Character '{character_name_to_delete}' not found in character list.", Console.MessageType.Error)
                 yield from Yield.wait(100)
                 return False
@@ -2036,15 +2034,15 @@ class Yield:
             if _failed():
                 ConsoleLog("Reroll", "Timeout while navigating to target character.", Console.MessageType.Error, log)
                 yield from Yield.wait(100)
-                return False
+                return False"""
             
             WindowFrames["DeleteCharacterButton"].FrameClick()
-            yield from Yield.wait(500)
+            yield from Yield.wait(750)
             PyImGui.set_clipboard_text(character_name_to_delete)
             Keystroke.PressAndReleaseCombo([Key.Ctrl.value, Key.V.value])
-            yield from Yield.wait(500)
+            yield from Yield.wait(750)
             WindowFrames["FinalDeleteCharacterButton"].FrameClick()
-            yield from Yield.wait(500)
+            yield from Yield.wait(750)
             
             return True
         
@@ -2106,12 +2104,13 @@ class Yield:
                     yield from Yield.wait(100)
                 yield from Yield.wait(100)
             
-            character_names = [char.player_name for char in GLOBAL_CACHE.Player.GetLoginCharacters()]
+            """character_names = [char.player_name for char in GLOBAL_CACHE.Player.GetLoginCharacters()]
             if character_name in character_names:
                 ConsoleLog("Reroll", f"Character '{character_name}' already exists among login characters.", Console.MessageType.Error, log)
                 yield from Yield.wait(100)
-                return  
+                return  """
             
+            yield from Yield.wait(1000)
             timeout_timer = ThrottledTimer(timeout_ms)
             ActionQueueManager().ResetAllQueues()
 
@@ -2128,12 +2127,12 @@ class Yield:
                 
             ConsoleLog("Reroll", "Creating new character...", Console.MessageType.Info, log)
             WindowFrames["CreateCharacterButton1"].FrameClick()
-            yield from Yield.wait(250)
+            yield from Yield.wait(500)
             WindowFrames["CreateCharacterButton2"].FrameClick()
             yield from Yield.wait(1000)
             # Select character type
             yield from _select_character_type("PvE")
-            yield from Yield.wait(250)
+            yield from Yield.wait(500)
             WindowFrames["CreateCharacterTypeNextButton"].FrameClick()
             yield from Yield.wait(1000)
             # Select campaign
@@ -2161,7 +2160,7 @@ class Yield:
             Keystroke.PressAndReleaseCombo([Key.Ctrl.value, Key.V.value])    
             yield from Yield.wait(1000)
             WindowFrames["FinalCreateCharacterButton"].FrameClick()
-            yield from Yield.wait(1000)
+            yield from Yield.wait(3000)
             
         @staticmethod
         def DeleteAndCreateCharacter(character_name_to_delete: str, new_character_name: str,
@@ -2170,6 +2169,7 @@ class Yield:
             result = yield from Yield.RerollCharacter.DeleteCharacter(character_name_to_delete, timeout_ms=timeout_ms//2, log=log)
             if not result:
                 return
+            yield from Yield.wait(1000)  # brief wait before creating new character
             yield from Yield.RerollCharacter.CreateCharacter(new_character_name, campaign_name, profession_name, timeout_ms=timeout_ms//2, log=log)    
 
 
@@ -2209,7 +2209,7 @@ class Yield:
                 
             pregame = GLOBAL_CACHE.Player.GetPreGameContext()
             character_index = pregame.chars.index(target_character_name) if target_character_name in pregame.chars else -1
-            last_known_index = pregame.index_1
+            last_known_index = pregame.chosen_character_index
             
             if character_index == -1:
                 ConsoleLog("Reroll", f"Character '{target_character_name}' not found in character list.", Console.MessageType.Error)
@@ -2225,7 +2225,7 @@ class Yield:
                     Keystroke.PressAndRelease(key)
                     yield from Yield.wait(250)
                     pregame = GLOBAL_CACHE.Player.GetPreGameContext()
-                    last_known_index = pregame.index_1
+                    last_known_index = pregame.chosen_character_index
                     
             if _failed():
                 ConsoleLog("Reroll", "Timeout while navigating to target character.", Console.MessageType.Error, log)
