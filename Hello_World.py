@@ -1,25 +1,26 @@
-from Py4GWCoreLib import (ActionQueueManager, GLOBAL_CACHE, Console, ConsoleLog, Routines, ThrottledTimer,
+from Py4GWCoreLib import (UIManager, GLOBAL_CACHE, Console, ConsoleLog, Routines, ThrottledTimer,
                           Keystroke, Key, FrameInfo, CHAR_MAP
                           )
 import PyImGui
-from typing import Generator, Any
-import ctypes
+import Py4GW
 
-
+from datetime import datetime, timedelta
+BOOT_TIME = datetime.now() - timedelta(milliseconds=Py4GW.Game.get_tick_count64())
 
 def draw_window():
-    if PyImGui.begin("Adress tester"):
-        if PyImGui.button("Execute call instruction"):
-            GLOBAL_CACHE.Coroutines.append(Routines.Yield.RerollCharacter.DeleteAndCreateCharacter("Dialoguer Test","Dialoguer Main","Nightfall","Dervish",timeout_ms=25000,log=True))
-            
-        if PyImGui.button("Create Character"):
-            GLOBAL_CACHE.Coroutines.append(Routines.Yield.RerollCharacter.CreateCharacter("Dialoguer Test","Nightfall","Dervish",timeout_ms=25000,log=True))
+    if PyImGui.begin("Address tester"):
         
+        PyImGui.text(f"is on loading screen: {GLOBAL_CACHE.Player.InCharacterSelectScreen()}")
+            
+
     PyImGui.end()
+
 
 
 def main():
     draw_window()
+    target = GLOBAL_CACHE.Player.GetTargetID()
+    model = GLOBAL_CACHE.Agent.GetModelID(target)
 
 
 if __name__ == "__main__":
